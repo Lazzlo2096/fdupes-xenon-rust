@@ -1,0 +1,6 @@
+[package]
+name = "xfdupies"
+version = "0.1.0"
+authors = ["lazzlo2096 <lazzlo2096@yandex.ru>"]
+
+[dependencies]
