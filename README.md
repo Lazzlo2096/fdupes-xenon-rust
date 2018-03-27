@@ -5,7 +5,7 @@
 [![Build Status][travis-image]][travis-url]
 [![Downloads Stats][npm-downloads]][npm-url]
 -->
-Crposs-platform and Rust version of [https://github.com/adrianlopezroche/fdupes](fdupes)
+Crposs-platform and Rust version of [fdupes](https://github.com/adrianlopezroche/fdupes)
 
 [//]:![](header.png)
 
