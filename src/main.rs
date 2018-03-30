@@ -1,4 +1,3 @@
-
 //use std::io::prelude::*; // ?
 
 use std::fs; // read_dir()
@@ -9,14 +8,34 @@ extern crate md5;
 
 // https://doc.rust-lang.org/beta/std/io/struct.BufReader.html
 // https://doc.rust-lang.org/std/fs/struct.File.html
-// use std::fs::File;
+use std::fs::File;
+use std::io::Read; //File::read_to_end()
+use std::str; //str::from_utf8()
+
+//Похоже я не обрабатываю ошибки
+fn my_read_file( file_name: &str, mut buf_str: &str) -> usize {
+
+	let mut f = File::open(file_name).unwrap();
+	//Почему он ищет этот файл в корневой папке? Мб карго перенаправляет...
+	//вместо ?, unwrap() - как исправить? и вообще wtf?
+	//Почему f должен быть mut?
+
+	let mut buffer = Vec::<u8>::new(); // А тут нужен mut?
+
+	let len = f.read_to_end(&mut buffer).unwrap(); // принимает &mut Vec<u8>
+
+	buf_str = str::from_utf8(&buffer).unwrap(); // buf_str - по 10 раз создаю копии только для type cast
+
+	// println!("!!!: {:?} {}", len, buf_str);
+	// assert_eq!(len, 5);
+	// assert_eq!(buf_str, "hello");
+
+	return len;
+}
 
 #[cfg(test)]
 mod ma_testing {
 	use super::*;
-	use std::fs::File;
-	use std::io::Read; //File::read_to_end()
-	use std::str; //str::from_utf8()
 
 	#[test]
 	fn it_works() {
@@ -81,5 +100,9 @@ fn search_files_rec( this_dir: &path::Path ){
 fn main() {
 
 	let this_dir = path::Path::new("./"); //".\\" - нет такой директории пишет Linux //относительно пути запуска программы
-	search_files_rec(&this_dir);
+	// search_files_rec(&this_dir);
+
+	let strr : &str;
+	let len = my_read_file("log.txt", strr);
+
 }
