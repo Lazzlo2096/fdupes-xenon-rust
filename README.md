@@ -14,6 +14,12 @@ Crposs-platform and Rust version of [fdupes](https://github.com/adrianlopezroche
 ```sh
 cargo run
 ```
+
+## Testing
+
+```sh
+cargo test
+```
 <!---
 ## Usage example
 
