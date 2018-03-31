@@ -24,7 +24,7 @@ fn my_read_file( file_name: &str, mut buf_str: &str) -> usize {
 
 	let len = f.read_to_end(&mut buffer).unwrap(); // принимает &mut Vec<u8>
 
-	buf_str = str::from_utf8(&buffer).unwrap(); // buf_str - по 10 раз создаю копии только для type cast
+	let buf_str = str::from_utf8(&buffer).unwrap(); // buf_str - по 10 раз создаю копии только для type cast
 
 	// println!("!!!: {:?} {}", len, buf_str);
 	// assert_eq!(len, 5);
@@ -99,10 +99,10 @@ fn search_files_rec( this_dir: &path::Path ){
 
 fn main() {
 
-	let this_dir = path::Path::new("./"); //".\\" - нет такой директории пишет Linux //относительно пути запуска программы
+	//let this_dir = path::Path::new("./"); //".\\" - нет такой директории пишет Linux //относительно пути запуска программы
 	// search_files_rec(&this_dir);
 
-	let strr : &str;
+	let strr: &str = "qwer";
 	let len = my_read_file("log.txt", strr);
 
 }
