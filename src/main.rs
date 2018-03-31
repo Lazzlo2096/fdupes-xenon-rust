@@ -12,21 +12,23 @@ use std::fs::File;
 use std::io::Read; //File::read_to_end()
 use std::str; //str::from_utf8()
 
+const TEST_FILE_NAME: &str = "test file.txt";
+
 //Похоже я не обрабатываю ошибки
-fn my_read_file( file_name: &str, mut buf_str: &str) -> usize {
+fn my_read_file( file_name: &str, buf_str: &mut String) -> usize {
+//Вообщем я реализвал наконец-то эту функцию, но наверно зазря.. потому что оказалось что и без меня есть read_to_string()
 
 	let mut f = File::open(file_name).unwrap();
 	//Почему он ищет этот файл в корневой папке? Мб карго перенаправляет...
 	//вместо ?, unwrap() - как исправить? и вообще wtf?
 	//Почему f должен быть mut?
 
-	let mut buffer = Vec::<u8>::new(); // А тут нужен mut?
+	let mut buffer: String = String::new(); // А тут нужен mut? нужен, а зачем?
+	let len = f.read_to_string(&mut buffer).unwrap(); // принимает &mut String
 
-	let len = f.read_to_end(&mut buffer).unwrap(); // принимает &mut Vec<u8>
+	*buf_str = buffer;
 
-	let buf_str = str::from_utf8(&buffer).unwrap(); // buf_str - по 10 раз создаю копии только для type cast
-
-	// println!("!!!: {:?} {}", len, buf_str);
+	// println!("read_to_string: {:?} {}", len, buf_str);
 	// assert_eq!(len, 5);
 	// assert_eq!(buf_str, "hello");
 
@@ -38,27 +40,30 @@ mod ma_testing {
 	use super::*;
 
 	#[test]
-	fn it_works() {
-		assert_eq!(4, 2+2);
+	//Похоже я не обрабатываю ошибки
+	fn read_file_test(){
+		let mut f = File::open(TEST_FILE_NAME).unwrap();
+
+		let mut buffer = Vec::<u8>::new(); 
+
+		let len = f.read_to_end(&mut buffer).unwrap(); 
+
+		let buf_str = str::from_utf8(&buffer).unwrap();
+
+		assert_eq!(len, 5);
+		assert_eq!(buf_str, "hello");
 	}
 
 	#[test]
-	//Похоже я не обрабатываю ошибки
-	fn read_file_test(){
-		let mut f = File::open("log.txt").unwrap();
-		//Почему он ищет этот файл в корневой папке? Мб карго перенаправляет...
-		//вместо ?, unwrap() - как исправить? и вообще wtf?
-		//Почему f должен быть mut?
+	fn my_read_file_test(){
 
-		let mut buffer = Vec::<u8>::new(); // А тут нужен mut?
+		let mut strr2: String = String::new();
 
-		let len = f.read_to_end(&mut buffer).unwrap(); // принимает &mut Vec<u8>
+		let len = my_read_file(TEST_FILE_NAME, &mut strr2);
 
-		let buf_str = str::from_utf8(&buffer).unwrap(); // buf_str - по 10 раз создаю копии только для type cast
-
-		// println!("!!!: {:?} {}", len, buf_str);
+		// println!("my_read_file: {} {}", len, strr2);
 		assert_eq!(len, 5);
-		assert_eq!(buf_str, "hello");
+		assert_eq!(strr2, "hello");
 	}
 	
 	#[test]
@@ -67,14 +72,15 @@ mod ma_testing {
 		assert_eq!(format!("{:x}", digest), "c3fcd3d76192e4007dfb496cca67e13b");
 	}
 
-	#[test]
+	#[test] //зависит от теста my_read_file_test()
 	fn get_md5_of_file_test(){
-		// let digest = ;
-		assert_eq!(format!("{:x}", md5::compute(b"hello")), "5d41402abc4b2a76b9719d911017c592");
+
+		let mut file_content: String = String::new();
+		my_read_file(TEST_FILE_NAME, &mut file_content);
+
+		assert_eq!(format!("{:x}", md5::compute(file_content.into_bytes())), "5d41402abc4b2a76b9719d911017c592");
 	}
-
 }
-
 
 fn search_files_rec( this_dir: &path::Path ){
 
@@ -100,9 +106,10 @@ fn search_files_rec( this_dir: &path::Path ){
 fn main() {
 
 	//let this_dir = path::Path::new("./"); //".\\" - нет такой директории пишет Linux //относительно пути запуска программы
-	// search_files_rec(&this_dir);
+	//search_files_rec(&this_dir);
 
-	let strr: &str = "qwer";
-	let len = my_read_file("log.txt", strr);
+	let mut strr2: String = String::new();
 
+	let len = my_read_file(TEST_FILE_NAME, &mut strr2);
+	println!("my_read_file: {} {}", len, strr2);
 }
