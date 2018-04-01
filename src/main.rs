@@ -82,9 +82,9 @@ mod ma_testing {
 	}
 }
 
-fn search_files_rec( this_dir: &path::Path ){
+fn hash_files_rec( this_dir: &path::Path ){
 
-	let is_recursive_search = true;
+	let is_recursive = true;
 
 	let paths: fs::ReadDir = fs::read_dir(this_dir).unwrap();
 
@@ -94,22 +94,37 @@ fn search_files_rec( this_dir: &path::Path ){
 
 		if metadata.file_type().is_dir() {
 			// println!("\tThis is dir!");
-			if is_recursive_search {
-				search_files_rec(&path);
+			if is_recursive {
+				hash_files_rec(&path);
 			}
 		}else{
-			println!("File: {}", path.display());
+
+			//открыть===============
+			let mut f = File::open(&path).unwrap(); //не обрабатываю ошибки??
+			//Почему f должен быть mut?
+			//! А НУЖНО ЛИ ЗАКРЫВАТЬ ФАЙЛ???
+
+			let mut buffer = Vec::<u8>::new();
+			f.read_to_end(&mut buffer).unwrap();
+			//======================
+			
+			//посчитать хеш=========
+			let hash = md5::compute(buffer);
+			let hash_str = format!("{:x}", hash);
+			//======================
+
+			// let mut strr2: String = String::new();
+			// let len = my_read_file(TEST_FILE_NAME, &mut strr2);
+			// println!("my_read_file: {} {}", len, strr2);
+
+			// println!("File: {}", path.display(), );
+			println!("File: {:?} {}", path.file_name().expect("the world is ending"), hash_str);
 		}
 	}
 }
 
 fn main() {
 
-	//let this_dir = path::Path::new("./"); //".\\" - нет такой директории пишет Linux //относительно пути запуска программы
-	//search_files_rec(&this_dir);
-
-	let mut strr2: String = String::new();
-
-	let len = my_read_file(TEST_FILE_NAME, &mut strr2);
-	println!("my_read_file: {} {}", len, strr2);
+	let this_dir = path::Path::new("./"); //".\\" - нет такой директории пишет Linux //относительно пути запуска программы
+	hash_files_rec(&this_dir);
 }
