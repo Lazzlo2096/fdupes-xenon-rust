@@ -2,6 +2,7 @@
 
 use std::fs; // read_dir()
 use std::path;
+use std::path::Path;
 
 //https://crates.io/crates/md5
 extern crate md5;
@@ -12,7 +13,12 @@ use std::fs::File;
 use std::io::Read; //File::read_to_end()
 use std::str; //str::from_utf8()
 
+use std::collections::HashMap;
+
 const TEST_FILE_NAME: &str = "test file.txt";
+const TEST_FILE_PATH: &str = "for tests"; // "."
+//const TEST_FILE_NAME_path: &path::Path = &Path::new("test file.txt"); //почему не компилиться?
+//const TEST_FILE_PATH_path: &path::Path = &Path::new("for tests"); // "."
 
 //Похоже я не обрабатываю ошибки
 fn my_read_file( file_name: &str, buf_str: &mut String) -> usize {
@@ -42,7 +48,7 @@ mod ma_testing {
 	#[test]
 	//Похоже я не обрабатываю ошибки
 	fn read_file_test(){
-		let mut f = File::open(TEST_FILE_NAME).unwrap();
+		let mut f = File::open( Path::new(TEST_FILE_PATH).join(TEST_FILE_NAME) ).unwrap();
 
 		let mut buffer = Vec::<u8>::new(); 
 
@@ -102,7 +108,7 @@ fn hash_files_rec( this_dir: &path::Path ){
 			//открыть===============
 			let mut f = File::open(&path).unwrap(); //не обрабатываю ошибки??
 			//Почему f должен быть mut?
-			//! А НУЖНО ЛИ ЗАКРЫВАТЬ ФАЙЛ???
+			// ! А НУЖНО ЛИ ЗАКРЫВАТЬ ФАЙЛ???
 
 			let mut buffer = Vec::<u8>::new();
 			f.read_to_end(&mut buffer).unwrap();
@@ -111,6 +117,8 @@ fn hash_files_rec( this_dir: &path::Path ){
 			//посчитать хеш=========
 			let hash = md5::compute(buffer);
 			let hash_str = format!("{:x}", hash);
+            //добавить хеш в дикшонари (путь, хеш) - мб ключ по хешу (хеш мап или B-tree?)
+             // или типа (hash , (указатель на) вектор с путями)
 			//======================
 
 			// let mut strr2: String = String::new();
@@ -118,13 +126,17 @@ fn hash_files_rec( this_dir: &path::Path ){
 			// println!("my_read_file: {} {}", len, strr2);
 
 			// println!("File: {}", path.display(), );
-			println!("File: {:?} {}", path.file_name().expect("the world is ending"), hash_str);
+			println!("File: {:?} \t {}", path.file_name().expect("the world is ending"), hash_str);
 		}
 	}
 }
 
 fn main() {
 
-	let this_dir = path::Path::new("./"); //".\\" - нет такой директории пишет Linux //относительно пути запуска программы
+    // почему HashMap не приемлет md5::Digest ? и к тому же думаю у строки сравнение на равенство дольше
+    // почему у Path не известен размер при компиляции?
+    let hash_paths_dics: HashMap<&str, Vec<&path::Path>> = HashMap::new(); //дикшонари его мы будем передавать в hash_files_rec
+
+	let this_dir = path::Path::new( TEST_FILE_PATH ); //".\\" - нет такой директории пишет в Linux'е //относительно пути запуска программы через cargo
 	hash_files_rec(&this_dir);
 }
