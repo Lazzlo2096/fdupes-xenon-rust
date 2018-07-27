@@ -1,3 +1,7 @@
+//TODOs:
+//line 121
+//line 132
+
 //use std::io::prelude::*; // ?
 
 use std::fs; // read_dir()
@@ -11,6 +15,9 @@ extern crate md5;
 use std::fs::File;
 use std::io::Read; //File::read_to_end()
 use std::str; //str::from_utf8()
+
+use std::env; //Для чтения аргументов из командной строки
+// и почему так "use std::env::args;" не работает??
 
 const TEST_FILE_NAME: &str = "test file.txt";
 
@@ -72,8 +79,20 @@ mod ma_testing {
 		assert_eq!(format!("{:x}", digest), "c3fcd3d76192e4007dfb496cca67e13b");
 	}
 
-	#[test] //зависит от теста my_read_file_test()
+	#[test]
 	fn get_md5_of_file_test(){
+		//чё я тут намутил...
+		let mut buffer = Vec::<u8>::new(); 
+		let len = File::open(TEST_FILE_NAME).unwrap().read_to_end(&mut buffer).unwrap(); 
+
+		let qwerty = str::from_utf8(&buffer).unwrap();
+		let file_content = String::from(qwerty);
+
+		assert_eq!(format!("{:x}", md5::compute(file_content.into_bytes())), "5d41402abc4b2a76b9719d911017c592");
+	}
+
+	#[test] //зависит от теста my_read_file_test()
+	fn get_md5_of_file_opened_by_my_func_test(){
 
 		let mut file_content: String = String::new();
 		my_read_file(TEST_FILE_NAME, &mut file_content);
@@ -82,34 +101,56 @@ mod ma_testing {
 	}
 }
 
-fn search_files_rec( this_dir: &path::Path ){
+fn scan_files_rec( scaning_directory: &path::Path ){
 
 	let is_recursive_search = true;
 
-	let paths: fs::ReadDir = fs::read_dir(this_dir).unwrap();
+	let files_in_scaning_directory: fs::ReadDir = fs::read_dir(scaning_directory).unwrap();
 
-	for path in paths {
-		let path = path.unwrap().path();
-		let metadata = fs::metadata(&path).unwrap();
+	for file in files_in_scaning_directory {
+		let file = file.unwrap().path();
+		//let metadata = fs::metadata(&file).unwrap();
 
-		if metadata.file_type().is_dir() {
+		if fs::metadata(&file).unwrap().file_type().is_dir() {
 			// println!("\tThis is dir!");
 			if is_recursive_search {
-				search_files_rec(&path);
+				scan_files_rec(&file);
 			}
 		}else{
-			println!("File: {}", path.display());
+			println!("File: {}", file.display());
+			// тут нужно записывать md5 файла в масив
 		}
 	}
 }
 
 fn main() {
 
-	//let this_dir = path::Path::new("./"); //".\\" - нет такой директории пишет Linux //относительно пути запуска программы
-	//search_files_rec(&this_dir);
+	//v получить директорию, иначе ошибка
+	let args: Vec<String> = env::args().collect(); 
+	//^ список из String, первый аргумент абс путь самой программы
+    //v если только один аргумент, то вывести help
+    //v А что если этот аргумент несуществующий путь или вообще не корректен как путь??
+    if args.len() <= 1 {
+    	let help_page = "use it this way:\n    xfdupes-xenon <path>";
+    	println!("{}", help_page);
+    }
+    //else {
+    	
+	//let this_dir = path::Path::new("./");
+	//^ ".\\" - нет такой директории пишет Linux
+	//^ это относительно пути запуска программы / WAT?
 
+	let directory_search = path::Path::new( &(args[1]) );
+	//^ что если я выйду за передлы args? Что будет если я передам пустую строку? вне else, лул
+	
+	scan_files_rec(&directory_search);
+
+	/*
 	let mut strr2: String = String::new();
 
 	let len = my_read_file(TEST_FILE_NAME, &mut strr2);
 	println!("my_read_file: {} {}", len, strr2);
+	*/
+
+	//}
 }
