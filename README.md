@@ -1,11 +1,14 @@
-# xfdupies
-> Duplicates finder on Windows and Linux
+# fdupes-xenon
+Duplicates finder on Windows and Linux. 
 <!---
 [![NPM Version][npm-image]][npm-url]
 [![Build Status][travis-image]][travis-url]
 [![Downloads Stats][npm-downloads]][npm-url]
 -->
-Crposs-platform and Rust version of [fdupes](https://github.com/adrianlopezroche/fdupes)
+<!---
+Crposs-platform and 
+-->
+Rust version of [fdupes](https://github.com/adrianlopezroche/fdupes). Written from scratch. 
 
 [//]:![](header.png)
 
