@@ -1,7 +1,8 @@
 //use std::io::prelude::*; // ?
 
 // https://doc.rust-lang.org/std/fs/struct.File.html
-use std::fs; // read_dir() , File
+// use std::fs::{*, self};
+use std::fs; //read_dir File
 use std::path; // Path
 use std::str; //str::from_utf8()
 
@@ -17,7 +18,7 @@ extern crate clap; // to parse command line args
 use clap::{Arg, App};
 
 const TEST_FILE_NAME: &str = "test file.txt";
-const DIR_FOR_TESTS: &str = "for tests"; // "."
+const DIR_FOR_TESTS: &str = "for tests";
 //const TEST_FILE_NAME_path: &path::Path = &Path::new("test file.txt"); //почему не компилиться?
 //const DIR_FOR_TESTS_path: &path::Path = &Path::new("for tests"); // "."
 
@@ -25,13 +26,15 @@ const DIR_FOR_TESTS: &str = "for tests"; // "."
 fn my_read_file( file_name: &str, buf_str: &mut String) -> usize {
 //Вообщем я реализвал наконец-то эту функцию, но наверно зазря.. потому что оказалось что и без меня есть read_to_string()
 
-	let mut f = File::open(file_name).unwrap();
+	let mut f = fs::File::open(file_name).unwrap();
 	//Почему он ищет этот файл в корневой папке? Мб карго перенаправляет...
 	//вместо ?, unwrap() - как исправить? и вообще wtf?
 	//Почему f должен быть mut?
 
-	let mut buffer: String = String::new(); // А тут нужен mut? нужен, а зачем?
-	let len = f.read_to_string(&mut buffer).unwrap(); // принимает &mut String
+	let mut buffer: String = String::new();
+	//^ А тут нужен mut? нужен, а зачем?
+	let len = f.read_to_string(&mut buffer).unwrap();
+	//^ принимает &mut String
 
 	*buf_str = buffer;
 
@@ -46,32 +49,36 @@ fn scan_files_hashes_rec( scaning_directory: &path::Path ){
 
 	let is_recursive_scan = true;
 
-	let files_in_scaning_directory: fs::ReadDir = fs::read_dir(scaning_directory).unwrap();
+	// or enrtries
+	let files_in_scaning_directory = fs::read_dir(scaning_directory).unwrap(); //<fs::ReadDir>
 
-	for file in files_in_scaning_directory {
-		let file = file.unwrap().path();
-		//let metadata = fs::metadata(&file).unwrap();
+	for entry in files_in_scaning_directory {
 
-		if fs::metadata(&file).unwrap().file_type().is_dir() {
+		let entry = entry.unwrap().path();
+		//let metadata = fs::metadata(&entry).unwrap();
+
+		// entry.metadata()
+		if fs::metadata(&entry).unwrap().file_type().is_dir() {
 			// println!("\tThis is dir!");
 			if is_recursive_scan {
-				scan_files_hashes_rec(&file);
+				scan_files_hashes_rec(&entry);
 			}
 		}else{
 			//v тут нужно записывать md5 файла в масив
-
 			//открыть===============
-			let mut f = File::open(&file).unwrap(); //не обрабатываю ошибки??
+			//v не обрабатываю ошибки??
+			let mut f = fs::File::open(&entry).unwrap();
 			//Почему f должен быть mut?
 			// ! А НУЖНО ЛИ ЗАКРЫВАТЬ ФАЙЛ???
 
 			let mut buffer = Vec::<u8>::new();
-			f.read_to_end(&mut buffer).unwrap();
+			f.read_to_end(&mut buffer);
 			//======================
 			
 			//посчитать хеш=========
-			let hash = md5::compute(buffer);
-			let hash_str = format!("{:x}", hash);
+			// let hash: md5::Digest = md5::compute(buffer); // Digest( [u8; 16] )
+			let md5::Digest(hash) = md5::compute(buffer); // [u8; 16]
+			let hash_str = format!("{:x}", md5::Digest(hash));
 			//добавить хеш в дикшонари (путь, хеш) - мб ключ по хешу (хеш мап или B-tree?)
 			 // или типа (hash , (указатель на) вектор с путями)
 			//======================
@@ -80,8 +87,8 @@ fn scan_files_hashes_rec( scaning_directory: &path::Path ){
 			// let len = my_read_file(TEST_FILE_NAME, &mut strr2);
 			// println!("my_read_file: {} {}", len, strr2);
 
-			// println!("File: {}", file.display());
-			println!("File: {:?} \t {}", file.file_name().expect("the world is ending"), hash_str);
+			// println!("File: {}", entry.display());
+			println!("File: {:?} \t {}", entry.file_name().expect("the world is ending"), hash_str);
 		}
 	}
 }
@@ -104,7 +111,8 @@ fn main() {
 
 	// почему HashMap не приемлет md5::Digest ? и к тому же думаю у строки сравнение на равенство дольше
 	// почему у Path не известен размер при компиляции?
-	let hash_paths_dics: HashMap<&str, Vec<&path::Path>> = HashMap::new(); //дикшонари его мы будем передавать в scan_files_hashes_rec
+	//дикшонари его мы будем передавать в scan_files_hashes_rec
+	let hash_paths_dics: HashMap<&str, Vec<&path::Path>> = HashMap::new();
 
 	//let this_dir = path::Path::new("./");
 	//^ ".\\" - нет такой директории пишет Linux
