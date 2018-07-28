@@ -5,3 +5,4 @@ authors = ["lazzlo2096 <lazzlo2096@yandex.ru>"]
 
 [dependencies]
 md5 = "0.3.7"
+clap = "2.32.0"
