@@ -48,7 +48,7 @@ fn my_read_file( file_name: &str, buf_str: &mut String) -> usize {
 //compute_files_hashes_rec
 fn scan_files_hashes_rec(
 	scaning_directory: &path::Path,
-	hash_paths_dict: &mut HashMap<[u8; 16], Vec<&path::PathBuf>>
+	hash_paths_dict: &mut HashMap<[u8; 16], Vec<path::PathBuf>>
 ){
 
 	let is_recursive_scan = true;
@@ -58,10 +58,9 @@ fn scan_files_hashes_rec(
 
 	for entry in files_in_scaning_directory {
 
-		let entry = entry.unwrap().path(); //std::path::PathBuf`
+		let entry = entry.unwrap().path(); //std::path::PathBuf
 
 		//let metadata = fs::metadata(&entry).unwrap();
-
 		// entry.metadata()
 		if fs::metadata(&entry).unwrap().file_type().is_dir() {
 			// println!("\tThis is dir!");
@@ -69,7 +68,6 @@ fn scan_files_hashes_rec(
 				// scan_files_hashes_rec(&entry, hash_paths_dict);
 			}
 		}else{
-			
 			//открыть файл==========
 			let mut f = fs::File::open(&entry).unwrap();
 			//не обрабатываю ошибки открытия (файл занят и т.д.)
@@ -81,26 +79,26 @@ fn scan_files_hashes_rec(
 			//======================
 			
 			//посчитать хеш=========
-			// let hash: md5::Digest = md5::compute(buffer); // struct Digest( [u8; 16] )
-			let md5::Digest(hash) = md5::compute(buffer); // [u8; 16]
+			let md5::Digest(hash) = md5::compute(buffer) /*: struct Digest( [u8; 16] )*/; // [u8; 16]
+			
 			let hash_str = format!("{:x}", md5::Digest(hash));
-			//добавить хеш в дикшонари (путь, хеш) - мб ключ по хешу (хеш мап или B-tree?)
-			 // или типа (hash , (указатель на) вектор с путями)
-			//======================
-
-			// let mut strr2: String = String::new();
-			// let len = my_read_file(TEST_FILE_NAME, &mut strr2);
-			// println!("my_read_file: {} {}", len, strr2);
-
 			// println!("File: {}", entry.display());
 			println!("File: {:?} \t {}", entry.file_name().expect("the world is ending"), hash_str);
+			//======================
 
-			//======= записывать md5 файла в масив
-			hash_paths_dict.insert(hash, vec![]);
-			// hash_paths_dict.insert(hash, vec![&entry]);
-			
-			for key in hash_paths_dict.keys() { println!("key={:?}", key); }
-			//====================================
+			//хеш мап или B-tree? // https://doc.rust-lang.org/1.0.0/std/collections/index.html
+			//=======записывать хеш md5 файла в в дикшонари(хеш, вектор с путями)=====
+			if hash_paths_dict.contains_key(&hash) {
+				//надо: append 
+				// hash_paths_dict.insert(hash, 
+					// hash_paths_dict. плучаем значени (по ключу) . append( entry )
+					// );
+				
+				// уже тут можно сдлеать какую нибудь оптимизацию по выделению повторок
+			} else {
+				hash_paths_dict.insert(hash, vec![entry]);
+			}
+			//========================================================================
 		}
 	}
 }
@@ -133,7 +131,7 @@ fn main() {
 	// почему HashMap не приемлет md5::Digest ? и к тому же думаю у строки сравнение на равенство дольше
 	// почему у Path не известен размер при компиляции?
 	// дикшонари его мы будем передавать в scan_files_hashes_rec
-	let mut hash_paths_dict: HashMap<[u8; 16], Vec<&path::PathBuf>> = HashMap::new();
+	let mut hash_paths_dict: HashMap<[u8; 16], Vec<path::PathBuf>> = HashMap::new();
 
 	//====================
 	// let a:[u8; 16] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
@@ -161,7 +159,7 @@ fn main() {
 	// scan_files_hashes_rec(&test_dir);
 	scan_files_hashes_rec(&directory_search, &mut hash_paths_dict);
 
-	for key in hash_paths_dict.keys() { println!("key={:?}", key) ; } // вроде работает - результат выноситься
+	// for key in hash_paths_dict.keys() { println!("key={:?}", key) ; }
 
 }
 
@@ -172,7 +170,7 @@ mod ma_testing {
 	#[test]
 	//Похоже я не обрабатываю ошибки
 	fn read_file_test(){
-		let mut f = File::open( Path::new(DIR_FOR_TESTS).join(TEST_FILE_NAME) ).unwrap();
+		let mut f = fs::File::open( path::Path::new(DIR_FOR_TESTS).join(TEST_FILE_NAME) ).unwrap();
 
 		let mut buffer = Vec::<u8>::new(); 
 
@@ -189,7 +187,7 @@ mod ma_testing {
 
 		let mut strr2: String = String::new();
 
-		let len = my_read_file(TEST_FILE_NAME, &mut strr2);
+		let len = my_read_file( path::Path::new(DIR_FOR_TESTS).join(TEST_FILE_NAME).to_str().unwrap(), &mut strr2);
 
 		// println!("my_read_file: {} {}", len, strr2);
 		assert_eq!(len, 5);
@@ -206,7 +204,7 @@ mod ma_testing {
 	fn get_md5_of_file_test(){
 		//чё я тут намутил...
 		let mut buffer = Vec::<u8>::new(); 
-		let len = File::open(TEST_FILE_NAME).unwrap().read_to_end(&mut buffer).unwrap(); 
+		let _len = fs::File::open( path::Path::new(DIR_FOR_TESTS).join(TEST_FILE_NAME)).unwrap().read_to_end(&mut buffer).unwrap(); 
 
 		let qwerty = str::from_utf8(&buffer).unwrap();
 		let file_content = String::from(qwerty);
@@ -218,7 +216,7 @@ mod ma_testing {
 	fn get_md5_of_file_opened_by_my_func_test(){
 
 		let mut file_content: String = String::new();
-		my_read_file(TEST_FILE_NAME, &mut file_content);
+		my_read_file( path::Path::new(DIR_FOR_TESTS).join(TEST_FILE_NAME).to_str().unwrap(), &mut file_content);
 
 		assert_eq!(format!("{:x}", md5::compute(file_content.into_bytes())), "5d41402abc4b2a76b9719d911017c592");
 	}
