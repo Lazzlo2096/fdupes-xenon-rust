@@ -45,7 +45,11 @@ fn my_read_file( file_name: &str, buf_str: &mut String) -> usize {
 	return len;
 }
 
-fn scan_files_hashes_rec( scaning_directory: &path::Path ){
+//compute_files_hashes_rec
+fn scan_files_hashes_rec(
+	scaning_directory: &path::Path,
+	hash_paths_dict: &mut HashMap<[u8; 16], Vec<&path::PathBuf>>
+){
 
 	let is_recursive_scan = true;
 
@@ -54,21 +58,22 @@ fn scan_files_hashes_rec( scaning_directory: &path::Path ){
 
 	for entry in files_in_scaning_directory {
 
-		let entry = entry.unwrap().path();
+		let entry = entry.unwrap().path(); //std::path::PathBuf`
+
 		//let metadata = fs::metadata(&entry).unwrap();
 
 		// entry.metadata()
 		if fs::metadata(&entry).unwrap().file_type().is_dir() {
 			// println!("\tThis is dir!");
 			if is_recursive_scan {
-				scan_files_hashes_rec(&entry);
+				// scan_files_hashes_rec(&entry, hash_paths_dict);
 			}
 		}else{
-			//v тут нужно записывать md5 файла в масив
-			//открыть===============
-			//v не обрабатываю ошибки??
+			
+			//открыть файл==========
 			let mut f = fs::File::open(&entry).unwrap();
-			//Почему f должен быть mut?
+			//не обрабатываю ошибки открытия (файл занят и т.д.)
+			//Почему f должен быть mut? нужно открыть только для чтения
 			// ! А НУЖНО ЛИ ЗАКРЫВАТЬ ФАЙЛ???
 
 			let mut buffer = Vec::<u8>::new();
@@ -76,7 +81,7 @@ fn scan_files_hashes_rec( scaning_directory: &path::Path ){
 			//======================
 			
 			//посчитать хеш=========
-			// let hash: md5::Digest = md5::compute(buffer); // Digest( [u8; 16] )
+			// let hash: md5::Digest = md5::compute(buffer); // struct Digest( [u8; 16] )
 			let md5::Digest(hash) = md5::compute(buffer); // [u8; 16]
 			let hash_str = format!("{:x}", md5::Digest(hash));
 			//добавить хеш в дикшонари (путь, хеш) - мб ключ по хешу (хеш мап или B-tree?)
@@ -89,18 +94,33 @@ fn scan_files_hashes_rec( scaning_directory: &path::Path ){
 
 			// println!("File: {}", entry.display());
 			println!("File: {:?} \t {}", entry.file_name().expect("the world is ending"), hash_str);
+
+			//======= записывать md5 файла в масив
+			hash_paths_dict.insert(hash, vec![]);
+			// hash_paths_dict.insert(hash, vec![&entry]);
+			
+			for key in hash_paths_dict.keys() { println!("key={:?}", key); }
+			//====================================
 		}
 	}
 }
 
 fn main() {
 
+	// let rewq: [u8; 2] = [1, 4];
+	// let rewq2: [u8; 2] = [1, 4];
+	// let rewq3: [u8; 2] = [1, 5];
+	// let werrt = rewq==rewq3;
+	// println!("{:?}",  werrt);
+	// assert_eq!(true, rewq==rewq2);
+	// assert_eq!(false, rewq==rewq3);
+
 	let matches = App::new("fdupes-xenon")
 	.version("0.1.0")
 	//.author("lazzlo2096 <lazzlo2096@yandex.ru>")
 	.about("Duplicates finder on Windows and Linux.\nRust version of fdupes. Written from scratch.")
 	.arg(Arg::with_name("PATH")
-		.help("Sets the path there will be findes duplicates")
+		.help("Sets the path there will be find duplicates")
 		.required(true)
 		.index(1) )
 	// .arg(Arg::with_name("v")
@@ -109,25 +129,39 @@ fn main() {
 	// 	.help("Sets the level of verbosity") )
 	.get_matches();
 
+
 	// почему HashMap не приемлет md5::Digest ? и к тому же думаю у строки сравнение на равенство дольше
 	// почему у Path не известен размер при компиляции?
-	//дикшонари его мы будем передавать в scan_files_hashes_rec
-	let hash_paths_dics: HashMap<&str, Vec<&path::Path>> = HashMap::new();
+	// дикшонари его мы будем передавать в scan_files_hashes_rec
+	let mut hash_paths_dict: HashMap<[u8; 16], Vec<&path::PathBuf>> = HashMap::new();
 
+	//====================
+	// let a:[u8; 16] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0];
+	// let b:[u8; 16] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1];
+	// let c:[u8; 16] = [0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,2];
+
+	// hash_paths_dict.insert(a, vec![]);
+	// if hash_paths_dict.contains_key(&a) { println!("\tThis is A!"); }
+	// if hash_paths_dict.contains_key(&b) { println!("\tThis is B!"); }
+	// let d : Vec<i8> = Vec::new(); // vec![] // [].to_vec()
+	//====================
+	
 	//let this_dir = path::Path::new("./");
 	//^ ".\\" - нет такой директории пишет Linux
-	//^ это относительно пути запуска программы / WAT?
+	//^ это относительно пути запуска программы
 
-	//v А ЕСЛИ не корректен как путь??
 	let qwer: &str = matches.value_of("PATH").unwrap();
+	//^ А ЕСЛИ value не корректен как путь??
 	//println!("{:?}",  qwer);
 
 	let directory_search = path::Path::new( &(qwer) );
-	//^ что если я выйду за передлы массива? Что будет если я передам пустую строку?
 	
+
 	// let test_dir = path::Path::new( DIR_FOR_TESTS );
 	// scan_files_hashes_rec(&test_dir);
-	scan_files_hashes_rec(&directory_search);
+	scan_files_hashes_rec(&directory_search, &mut hash_paths_dict);
+
+	for key in hash_paths_dict.keys() { println!("key={:?}", key) ; } // вроде работает - результат выноситься
 
 }
 
