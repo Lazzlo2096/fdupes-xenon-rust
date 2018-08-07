@@ -89,7 +89,7 @@ fn scan_files_hashes_rec(
 			//хеш мап или B-tree? // https://doc.rust-lang.org/1.0.0/std/collections/index.html
 			//=======записывать хеш md5 файла в в дикшонари(хеш, вектор с путями)=====
 			if hash_paths_dict.contains_key(&hash) {
-				//надо: append 
+				//надо: append :
 				// hash_paths_dict.insert(hash, 
 					// hash_paths_dict. плучаем значени (по ключу) . append( entry )
 					// );
