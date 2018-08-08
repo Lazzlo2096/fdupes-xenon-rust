@@ -65,7 +65,7 @@ fn scan_files_hashes_rec(
 		if fs::metadata(&entry).unwrap().file_type().is_dir() {
 			// println!("\tThis is dir!");
 			if is_recursive_scan {
-				// scan_files_hashes_rec(&entry, hash_paths_dict);
+				scan_files_hashes_rec(&entry, hash_paths_dict);
 			}
 		}else{
 			//открыть файл==========
@@ -83,20 +83,20 @@ fn scan_files_hashes_rec(
 			
 			let hash_str = format!("{:x}", md5::Digest(hash));
 			// println!("File: {}", entry.display());
-			println!("File: {:?} \t {}", entry.file_name().expect("the world is ending"), hash_str);
+			//println!("File: {:?} \t {}", entry.file_name().expect("the world is ending"), hash_str);
 			//======================
 
 			//хеш мап или B-tree? // https://doc.rust-lang.org/1.0.0/std/collections/index.html
 			//=======записывать хеш md5 файла в в дикшонари(хеш, вектор с путями)=====
 			if hash_paths_dict.contains_key(&hash) {
-				//надо: append 
-				// hash_paths_dict.insert(hash, 
-					// hash_paths_dict. плучаем значени (по ключу) . append( entry )
-					// );
+				//append (push) :
+					// такой безусловный unwrap, потому что точто есть такой кей
+					hash_paths_dict.get_mut(&hash).unwrap().push( entry );
 				
 				// уже тут можно сдлеать какую нибудь оптимизацию по выделению повторок
 			} else {
 				hash_paths_dict.insert(hash, vec![entry]);
+				//println!("{:?}", hash_paths_dict);
 			}
 			//========================================================================
 		}
@@ -160,6 +160,9 @@ fn main() {
 	scan_files_hashes_rec(&directory_search, &mut hash_paths_dict);
 
 	// for key in hash_paths_dict.keys() { println!("key={:?}", key) ; }
+	for (key, val) in hash_paths_dict.iter() {
+    	println!("key: {:?} val: {:?}", key, val);
+	}
 
 }
 

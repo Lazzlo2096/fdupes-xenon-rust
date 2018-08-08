@@ -15,7 +15,7 @@ Rust version of [fdupes](https://github.com/adrianlopezroche/fdupes). Written fr
 ## Installation
 
 ```sh
-cargo run
+cargo run .
 ```
 
 ## Testing
