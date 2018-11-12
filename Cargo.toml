@@ -1,6 +1,6 @@
 [package]
 name = "fdupes-xenon"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["lazzlo2096 <lazzlo2096@yandex.ru>"]
 
 [dependencies]

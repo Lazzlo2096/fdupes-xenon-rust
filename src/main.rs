@@ -114,18 +114,18 @@ fn main() {
 	// assert_eq!(false, rewq==rewq3);
 
 	let matches = App::new("fdupes-xenon")
-	.version("0.1.0")
-	//.author("lazzlo2096 <lazzlo2096@yandex.ru>")
-	.about("Duplicates finder on Windows and Linux.\nRust version of fdupes. Written from scratch.")
-	.arg(Arg::with_name("PATH")
-		.help("Sets the path there will be find duplicates")
-		.required(true)
-		.index(1) )
-	// .arg(Arg::with_name("v")
-	// 	.short("v")
-	// 	.multiple(true)
-	// 	.help("Sets the level of verbosity") )
-	.get_matches();
+		.version("0.1.1")
+		//.author("lazzlo2096 <lazzlo2096@yandex.ru>")
+		.about("Duplicates finder on Windows and Linux.\nRust version of fdupes written from scratch.")
+		.arg(Arg::with_name("PATH")
+			.help("Sets the path there will be find duplicates")
+			.required(true)
+			.index(1) )
+		//.arg(Arg::with_name("v")
+		//	.short("v")
+		//	.multiple(true)
+		//	.help("Sets the level of verbosity") )
+		.get_matches();
 
 
 	// почему HashMap не приемлет md5::Digest ? и к тому же думаю у строки сравнение на равенство дольше
@@ -161,7 +161,11 @@ fn main() {
 
 	// for key in hash_paths_dict.keys() { println!("key={:?}", key) ; }
 	for (key, val) in hash_paths_dict.iter() {
-    	println!("key: {:?} val: {:?}", key, val);
+		if val.len()>1 {
+			//println!("key: {:?} val: {:?}", key, val); //full info
+			println!("{:?}", val);
+				// WHY "\\" ? : ["./for tests/file (3).txt", "./for tests/folder 2\\file (3).txt"]
+		}
 	}
 
 }

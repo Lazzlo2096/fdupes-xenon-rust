@@ -8,14 +8,17 @@ Duplicates finder on Windows and Linux.
 <!---
 Crposs-platform and 
 -->
-Rust version of [fdupes](https://github.com/adrianlopezroche/fdupes). Written from scratch. 
+Rust version of [fdupes](https://github.com/adrianlopezroche/fdupes) written from scratch. 
 
 [//]:![](header.png)
 
-## Installation
+## Building
 
 ```sh
-cargo run .
+cargo run "./for tests/"
+#or
+cargo build
+./target/debug/fdupes-xenon <PATH>
 ```
 
 ## Testing
@@ -23,6 +26,14 @@ cargo run .
 ```sh
 cargo test
 ```
+
+## Release History
+
+* 0.1.1
+    * MAIN FUNCTION released: Now it findes Duplicates.
+* 0.1.0
+    * not working prototype.
+	
 <!---
 ## Usage example
 
