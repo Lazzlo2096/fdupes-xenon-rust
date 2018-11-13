@@ -48,10 +48,9 @@ fn my_read_file( file_name: &str, buf_str: &mut String) -> usize {
 //compute_files_hashes_rec
 fn scan_files_hashes_rec(
 	scaning_directory: &path::Path,
-	hash_paths_dict: &mut HashMap<[u8; 16], Vec<path::PathBuf>>
+	hash_paths_dict: &mut HashMap<[u8; 16], Vec<path::PathBuf>>,
+	is_recursive_scan: bool
 ){
-
-	let is_recursive_scan = true;
 
 	// or enrtries
 	let files_in_scaning_directory = fs::read_dir(scaning_directory).unwrap(); //<fs::ReadDir>
@@ -65,7 +64,7 @@ fn scan_files_hashes_rec(
 		if fs::metadata(&entry).unwrap().file_type().is_dir() {
 			// println!("\tThis is dir!");
 			if is_recursive_scan {
-				scan_files_hashes_rec(&entry, hash_paths_dict);
+				scan_files_hashes_rec(&entry, hash_paths_dict, is_recursive_scan);
 			}
 		}else{
 			//открыть файл==========
@@ -105,6 +104,7 @@ fn scan_files_hashes_rec(
 
 fn main() {
 
+	//BEGIN = Args Processer ==================
 	// let rewq: [u8; 2] = [1, 4];
 	// let rewq2: [u8; 2] = [1, 4];
 	// let rewq3: [u8; 2] = [1, 5];
@@ -121,12 +121,17 @@ fn main() {
 			.help("Sets the path there will be find duplicates")
 			.required(true)
 			.index(1) )
+		.arg(Arg::with_name("RECURS")
+			.help("Обходить ли папки рекурсивно")
+			.short("r") )
 		//.arg(Arg::with_name("v")
 		//	.short("v")
 		//	.multiple(true)
 		//	.help("Sets the level of verbosity") )
 		.get_matches();
 
+	let is_recursive_scan = matches.is_present("RECURS");
+	//END = Args Processer ==================
 
 	// почему HashMap не приемлет md5::Digest ? и к тому же думаю у строки сравнение на равенство дольше
 	// почему у Path не известен размер при компиляции?
@@ -157,7 +162,7 @@ fn main() {
 
 	// let test_dir = path::Path::new( DIR_FOR_TESTS );
 	// scan_files_hashes_rec(&test_dir);
-	scan_files_hashes_rec(&directory_search, &mut hash_paths_dict);
+	scan_files_hashes_rec(&directory_search, &mut hash_paths_dict, is_recursive_scan);
 
 	// for key in hash_paths_dict.keys() { println!("key={:?}", key) ; }
 	for (key, val) in hash_paths_dict.iter() {
