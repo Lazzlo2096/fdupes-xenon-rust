@@ -1,3 +1,4 @@
+// [FIXIT]
 //use std::io::prelude::*; // ?
 
 // https://doc.rust-lang.org/std/fs/struct.File.html
@@ -117,20 +118,35 @@ fn main() {
 		.version("0.1.1")
 		//.author("lazzlo2096 <lazzlo2096@yandex.ru>")
 		.about("Duplicates finder on Windows and Linux.\nRust version of fdupes written from scratch.")
-		.arg(Arg::with_name("PATH")
+		.arg(Arg::with_name("PATH") 
 			.help("Sets the path there will be find duplicates")
 			.required(true)
-			.index(1) )
+			.index(1)
+			//.takes_value(true) //why work without it?
+			.multiple(true) /// ?? // https://docs.rs/clap/2.32.0/clap/struct.Arg.html#method.multiple
+			) 
 		.arg(Arg::with_name("RECURS")
 			.help("Обходить ли папки рекурсивно")
 			.short("r") )
-		//.arg(Arg::with_name("v")
+		//.arg(Arg::with_name("v") // verbose
 		//	.short("v")
 		//	.multiple(true)
 		//	.help("Sets the level of verbosity") )
 		.get_matches();
 
+	/*
+	assert!(matches.is_present("PATH"));
+	assert_eq!(matches.occurrences_of("PATH"), 2);
+	let files: Vec<_> = matches.values_of("PATH").unwrap().collect();
+	assert_eq!(files, ["./for tests", "./src"]);
+	*/
+
+	// assert!(matches.is_present("verbose"));
+	// assert_eq!(matches.occurrences_of("verbose"), 3);
+
+	let qwer: &str = matches.value_of("PATH").unwrap();
 	let is_recursive_scan = matches.is_present("RECURS");
+
 	//END = Args Processer ==================
 
 	// почему HashMap не приемлет md5::Digest ? и к тому же думаю у строки сравнение на равенство дольше
@@ -153,8 +169,8 @@ fn main() {
 	//^ ".\\" - нет такой директории пишет Linux
 	//^ это относительно пути запуска программы
 
-	let qwer: &str = matches.value_of("PATH").unwrap();
-	//^ А ЕСЛИ value не корректен как путь??
+	//^ [FIXIT] А ЕСЛИ value не корректен как путь??
+
 	//println!("{:?}",  qwer);
 
 	let directory_search = path::Path::new( &(qwer) );
