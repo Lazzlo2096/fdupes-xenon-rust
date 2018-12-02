@@ -1,3 +1,4 @@
+// [FIXIT]
 //use std::io::prelude::*; // ?
 
 // https://doc.rust-lang.org/std/fs/struct.File.html
@@ -17,8 +18,8 @@ use std::collections::HashMap;
 extern crate clap; // to parse command line args
 use clap::{Arg, App};
 
-const TEST_FILE_NAME: &str = "test file.txt";
-const DIR_FOR_TESTS: &str = "for tests";
+//const TEST_FILE_NAME: &str = "test file.txt";
+//const DIR_FOR_TESTS: &str = "for tests";
 //const TEST_FILE_NAME_path: &path::Path = &Path::new("test file.txt"); //почему не компилиться?
 //const DIR_FOR_TESTS_path: &path::Path = &Path::new("for tests"); // "."
 
@@ -80,9 +81,10 @@ fn scan_files_hashes_rec(
 			//посчитать хеш=========
 			let md5::Digest(hash) = md5::compute(buffer) /*: struct Digest( [u8; 16] )*/; // [u8; 16]
 			
+			
+			/*println!("File: {}", entry.display());  // TRACE
 			let hash_str = format!("{:x}", md5::Digest(hash));
-			// println!("File: {}", entry.display());
-			//println!("File: {:?} \t {}", entry.file_name().expect("the world is ending"), hash_str);
+			println!("File: {:?} \t {}", entry.file_name().expect("the world is ending"), hash_str);*/
 			//======================
 
 			//хеш мап или B-tree? // https://doc.rust-lang.org/1.0.0/std/collections/index.html
@@ -104,7 +106,7 @@ fn scan_files_hashes_rec(
 
 fn main() {
 
-	//BEGIN = Args Processer ==================
+	//==BEGIN===Args Processer===================
 	// let rewq: [u8; 2] = [1, 4];
 	// let rewq2: [u8; 2] = [1, 4];
 	// let rewq3: [u8; 2] = [1, 5];
@@ -117,21 +119,60 @@ fn main() {
 		.version("0.1.1")
 		//.author("lazzlo2096 <lazzlo2096@yandex.ru>")
 		.about("Duplicates finder on Windows and Linux.\nRust version of fdupes written from scratch.")
-		.arg(Arg::with_name("PATH")
-			.help("Sets the path there will be find duplicates")
+		.arg(Arg::with_name("PATHS") 
+			.help("Sets the paths there will be find duplicates")
 			.required(true)
-			.index(1) )
+			.index(1)
+			//.takes_value(true) //why work without it?
+			.multiple(true) // ?? // https://docs.rs/clap/2.32.0/clap/struct.Arg.html#method.multiple
+			) 
 		.arg(Arg::with_name("RECURS")
 			.help("Обходить ли папки рекурсивно")
 			.short("r") )
-		//.arg(Arg::with_name("v")
+		//.arg(Arg::with_name("v") // verbose
 		//	.short("v")
 		//	.multiple(true)
 		//	.help("Sets the level of verbosity") )
 		.get_matches();
 
+	//==========testing=========
+	/*
+	assert!(matches.is_present("PATHS"));
+	assert_eq!(matches.occurrences_of("PATHS"), 2);
+	let files: Vec<_> = matches.values_of("PATHS").unwrap().collect();
+	assert_eq!(files, ["./for tests", "./src"]);
+	*/
+
+	// assert!(matches.is_present("verbose"));
+	// assert_eq!(matches.occurrences_of("verbose"), 3);
+	//==END=====testing=========
+
+	//====paths=================
+	let paths_from_args: Vec<_> = matches.values_of("PATHS").unwrap().collect();
+	
+	//--old--
+	let qwer: &str = paths_from_args[0];
+	let paths_for_searching = path::Path::new( &(qwer) );
+	//-------
+
+	//--new--
+	let mut paths_for_searching: Vec<_> = Vec::new(); // ПОЧЕМУ РАБОТАЕТ БЕЗ ТИПА?!?!? ЛОЛ
+
+	//let this_dir = path::Path::new("./");
+	//^ ".\\" - нет такой директории пишет Linux
+	//^ это относительно пути запуска программы
+	//v [FIXIT] А ЕСЛИ value не корректен как путь??
+	//v А что если нет одного из папок в списке? ТО всё должно зафелиться!
+
+	for str_path in paths_from_args { // map it?
+		paths_for_searching.push(  path::Path::new( str_path )  );
+	}
+	//-------
+	//==END===paths=================
+
 	let is_recursive_scan = matches.is_present("RECURS");
-	//END = Args Processer ==================
+
+	//==END===Args Processer===================
 
 	// почему HashMap не приемлет md5::Digest ? и к тому же думаю у строки сравнение на равенство дольше
 	// почему у Path не известен размер при компиляции?
@@ -149,26 +190,25 @@ fn main() {
 	// let d : Vec<i8> = Vec::new(); // vec![] // [].to_vec()
 	//====================
 	
-	//let this_dir = path::Path::new("./");
-	//^ ".\\" - нет такой директории пишет Linux
-	//^ это относительно пути запуска программы
 
-	let qwer: &str = matches.value_of("PATH").unwrap();
-	//^ А ЕСЛИ value не корректен как путь??
-	//println!("{:?}",  qwer);
-
-	let directory_search = path::Path::new( &(qwer) );
-	
 
 	// let test_dir = path::Path::new( DIR_FOR_TESTS );
 	// scan_files_hashes_rec(&test_dir);
-	scan_files_hashes_rec(&directory_search, &mut hash_paths_dict, is_recursive_scan);
+	for item in paths_for_searching {
+		scan_files_hashes_rec( item, &mut hash_paths_dict, is_recursive_scan);
+	}
+	
 
 	// for key in hash_paths_dict.keys() { println!("key={:?}", key) ; }
-	for (key, val) in hash_paths_dict.iter() {
+	for (_key, val) in hash_paths_dict.iter() {
 		if val.len()>1 {
 			//println!("key: {:?} val: {:?}", key, val); //full info
-			println!("{:?}", val);
+			println!("--------"); //size // sha // max common folder ?
+			//если префикс ./ то не покахывать его...
+			for path_to_file in val {
+				println!("{:?}", path_to_file);
+			}
+			
 				// WHY "\\" ? : ["./for tests/file (3).txt", "./for tests/folder 2\\file (3).txt"]
 		}
 	}
