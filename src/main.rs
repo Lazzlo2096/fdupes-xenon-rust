@@ -152,7 +152,6 @@ fn main() {
 	
 	//--old--
 	let qwer: &str = paths_from_args[0];
-		println!("{:?}", qwer);
 	let paths_for_searching = path::Path::new( &(qwer) );
 	//-------
 
@@ -195,13 +194,21 @@ fn main() {
 
 	// let test_dir = path::Path::new( DIR_FOR_TESTS );
 	// scan_files_hashes_rec(&test_dir);
-	scan_files_hashes_rec( paths_for_searching[0], &mut hash_paths_dict, is_recursive_scan);
+	for item in paths_for_searching {
+		scan_files_hashes_rec( item, &mut hash_paths_dict, is_recursive_scan);
+	}
+	
 
 	// for key in hash_paths_dict.keys() { println!("key={:?}", key) ; }
 	for (_key, val) in hash_paths_dict.iter() {
 		if val.len()>1 {
 			//println!("key: {:?} val: {:?}", key, val); //full info
-			println!("{:?}", val);
+			println!("--------"); //size // sha // max common folder ?
+			//если префикс ./ то не покахывать его...
+			for path_to_file in val {
+				println!("{:?}", path_to_file);
+			}
+			
 				// WHY "\\" ? : ["./for tests/file (3).txt", "./for tests/folder 2\\file (3).txt"]
 		}
 	}
