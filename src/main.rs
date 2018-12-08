@@ -127,9 +127,9 @@ fn main() {
 	
 	for (_key, val) in hash_paths_dict.iter() {
 		if val.len()>1 {
-			println!("[ hash: {:?}] --------", _key); //  {:x}
-				 //size // hash // max common folder ?
-			//если префикс ./ то не покаpывать его...
+			println!("---- hash: {:x} --------", md5::Digest(*_key)); //size // hash // max common folder ?
+				//если префикс ./ то не покаpывать его...
+				
 			for path_to_file in val {
 				println!("{:?}", path_to_file);
 			}
