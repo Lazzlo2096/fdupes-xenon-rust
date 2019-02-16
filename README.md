@@ -15,10 +15,10 @@ Rust version of [fdupes](https://github.com/adrianlopezroche/fdupes) written fro
 ## Building
 
 ```sh
-cargo run "./for tests/"
+cargo run "./for tests/" -r
 #or
 cargo build
-./target/debug/fdupes-xenon <PATH>
+./target/debug/fdupes-xenon <PATH> -r
 ```
 
 ## Testing
@@ -29,6 +29,10 @@ cargo test
 
 ## Release History
 
+* 0.1.2
+    * Feature 224: Pass multiple paths in arguments.
+    * Add CLI flag for recursive search.
+    * More acceptable out interface.
 * 0.1.1
     * MAIN FUNCTION released: Now it findes Duplicates.
 * 0.1.0
